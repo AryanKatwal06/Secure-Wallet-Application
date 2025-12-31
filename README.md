@@ -163,7 +163,7 @@ npm install
 
 Start the Expo server (clear cache):
 
-npx expo start -c
+npx expo start -c --lan
 
 
 Open Expo Go on your phone and scan the QR code.
