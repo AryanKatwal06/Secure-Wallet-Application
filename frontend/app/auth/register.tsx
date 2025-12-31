@@ -22,7 +22,7 @@ export default function RegisterScreen() {
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [scaleAnim] = useState(new Animated.Value(1));
+  const scaleAnim = useState(new Animated.Value(1))[0];
   const router = useRouter();
   const { register, isLoading } = useWallet();
   const handleRegister = async () => {
@@ -51,18 +51,16 @@ export default function RegisterScreen() {
       Alert.alert('Registration Failed', message);
     }
   };
-  const handlePressIn = () => {
+  const pressIn = () =>
     Animated.spring(scaleAnim, {
       toValue: 0.95,
       useNativeDriver: true,
     }).start();
-  };
-  const handlePressOut = () => {
+  const pressOut = () =>
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
     }).start();
-  };
   const isPinValid = pin.length === 6;
   const isPinMatch = pin === confirmPin && confirmPin.length === 6;
   return (
@@ -73,7 +71,7 @@ export default function RegisterScreen() {
         style={styles.container}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
           <ScrollView
@@ -83,7 +81,11 @@ export default function RegisterScreen() {
           >
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <UserPlus size={scale(48)} color="#10b981" strokeWidth={2.5} />
+                <UserPlus
+                  size={scale(48)}
+                  color="#10b981"
+                  strokeWidth={2.5}
+                />
               </View>
               <Text style={styles.title}>Create Account</Text>
               <Text style={styles.subtitle}>Join SecureWallet</Text>
@@ -99,6 +101,7 @@ export default function RegisterScreen() {
                   onChangeText={setUsername}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  returnKeyType="next"
                 />
               </View>
               <View style={styles.inputContainer}>
@@ -110,13 +113,17 @@ export default function RegisterScreen() {
                     placeholder="6-digit PIN"
                     placeholderTextColor="#666"
                     value={pin}
-                    onChangeText={(text) =>
-                      setPin(text.replace(/[^0-9]/g, '').slice(0, 6))
+                    onChangeText={(t) =>
+                      setPin(t.replace(/[^0-9]/g, '').slice(0, 6))
                     }
                     keyboardType="number-pad"
                     secureTextEntry
+                    maxLength={6}
+                    returnKeyType="next"
                   />
-                  {isPinValid && <Check size={scale(20)} color="#10b981" />}
+                  {isPinValid && (
+                    <Check size={scale(20)} color="#10b981" />
+                  )}
                 </View>
               </View>
               <View style={styles.inputContainer}>
@@ -128,21 +135,25 @@ export default function RegisterScreen() {
                     placeholder="Re-enter PIN"
                     placeholderTextColor="#666"
                     value={confirmPin}
-                    onChangeText={(text) =>
-                      setConfirmPin(text.replace(/[^0-9]/g, '').slice(0, 6))
+                    onChangeText={(t) =>
+                      setConfirmPin(t.replace(/[^0-9]/g, '').slice(0, 6))
                     }
                     keyboardType="number-pad"
                     secureTextEntry
+                    maxLength={6}
+                    returnKeyType="done"
                   />
-                  {isPinMatch && <Check size={scale(20)} color="#10b981" />}
+                  {isPinMatch && (
+                    <Check size={scale(20)} color="#10b981" />
+                  )}
                 </View>
               </View>
               <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <TouchableOpacity
-                  style={[styles.button, isLoading && styles.buttonDisabled]}
+                  style={[styles.button, isLoading && styles.disabled]}
                   onPress={handleRegister}
-                  onPressIn={handlePressIn}
-                  onPressOut={handlePressOut}
+                  onPressIn={pressIn}
+                  onPressOut={pressOut}
                   disabled={isLoading}
                   activeOpacity={0.9}
                 >
@@ -249,7 +260,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: verticalScale(12),
   },
-  buttonDisabled: {
+  disabled: {
     opacity: 0.6,
   },
   buttonGradient: {

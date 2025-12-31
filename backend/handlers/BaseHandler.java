@@ -9,13 +9,31 @@ import java.util.HashMap;
 import java.util.Map;
 public abstract class BaseHandler implements HttpHandler {
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public final void handle(HttpExchange exchange) throws IOException {
+        addCorsHeaders(exchange);
         if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
-            addCorsHeaders(exchange);
             exchange.sendResponseHeaders(204, -1);
             return;
         }
-        handleRequest(exchange);
+        try {
+            handleRequest(exchange);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String json =
+                    "{"
+                            + "\"success\":false,"
+                            + "\"error\":\"Internal server error\""
+                            + "}";
+            byte[] response = json.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set(
+                    "Content-Type",
+                    "application/json; charset=UTF-8"
+            );
+            exchange.sendResponseHeaders(500, response.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response);
+            }
+        }
     }
     protected abstract void handleRequest(HttpExchange exchange) throws IOException;
     protected void sendJsonResponse(
@@ -23,12 +41,11 @@ public abstract class BaseHandler implements HttpHandler {
             int statusCode,
             String jsonResponse
     ) throws IOException {
-        addCorsHeaders(exchange);
+        byte[] response = jsonResponse.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set(
                 "Content-Type",
                 "application/json; charset=UTF-8"
         );
-        byte[] response = jsonResponse.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(statusCode, response.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(response);
@@ -39,13 +56,15 @@ public abstract class BaseHandler implements HttpHandler {
             int statusCode,
             String message
     ) throws IOException {
-        sendJsonResponse(
-                exchange,
-                statusCode,
-                "{\"success\":false,\"message\":\"" + escape(message) + "\"}"
-        );
+        String json =
+                "{"
+                        + "\"success\":false,"
+                        + "\"error\":\"" + escape(message) + "\""
+                        + "}";
+        sendJsonResponse(exchange, statusCode, json);
     }
-    protected Map<String, String> parseRequestBody(HttpExchange exchange) throws IOException {
+    protected Map<String, String> parseRequestBody(HttpExchange exchange)
+            throws IOException {
         try (InputStream is = exchange.getRequestBody()) {
             String body = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             return parseSimpleJson(body);
@@ -57,7 +76,8 @@ public abstract class BaseHandler implements HttpHandler {
         json = json.trim();
         if (!json.startsWith("{") || !json.endsWith("}")) return map;
         json = json.substring(1, json.length() - 1);
-        String[] pairs = json.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        String[] pairs =
+                json.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
         for (String pair : pairs) {
             String[] kv = pair.split(":", 2);
             if (kv.length != 2) continue;
@@ -75,9 +95,18 @@ public abstract class BaseHandler implements HttpHandler {
         return null;
     }
     private void addCorsHeaders(HttpExchange exchange) {
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        exchange.getResponseHeaders().set(
+                "Access-Control-Allow-Origin",
+                "*"
+        );
+        exchange.getResponseHeaders().set(
+                "Access-Control-Allow-Methods",
+                "GET, POST, OPTIONS"
+        );
+        exchange.getResponseHeaders().set(
+                "Access-Control-Allow-Headers",
+                "Content-Type, Authorization"
+        );
     }
     private String stripQuotes(String s) {
         if (s.startsWith("\"") && s.endsWith("\"")) {

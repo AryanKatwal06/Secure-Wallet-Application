@@ -5,7 +5,9 @@ public class Transaction implements Serializable {
     private final String transactionId;
     private final TransactionType type;
     private final String senderId;
+    private final String senderUsername;
     private final String receiverId;
+    private final String receiverUsername;
     private final double amount;
     private TransactionStatus status;
     private final long createdAt;
@@ -14,7 +16,9 @@ public class Transaction implements Serializable {
             String transactionId,
             TransactionType type,
             String senderId,
+            String senderUsername,
             String receiverId,
+            String receiverUsername,
             double amount
     ) {
         if (amount <= 0) {
@@ -23,7 +27,9 @@ public class Transaction implements Serializable {
         this.transactionId = transactionId;
         this.type = type;
         this.senderId = senderId;
+        this.senderUsername = senderUsername;
         this.receiverId = receiverId;
+        this.receiverUsername = receiverUsername;
         this.amount = round(amount);
         this.status = TransactionStatus.PENDING;
         this.createdAt = System.currentTimeMillis();
@@ -37,14 +43,36 @@ public class Transaction implements Serializable {
         this.status = TransactionStatus.FAILED;
         this.completedAt = System.currentTimeMillis();
     }
-    public String getTransactionId() { return transactionId; }
-    public TransactionType getType() { return type; }
-    public String getSenderId() { return senderId; }
-    public String getReceiverId() { return receiverId; }
-    public double getAmount() { return amount; }
-    public TransactionStatus getStatus() { return status; }
-    public long getCreatedAt() { return createdAt; }
-    public long getCompletedAt() { return completedAt; }
+    public String getTransactionId() {
+        return transactionId;
+    }
+    public TransactionType getType() {
+        return type;
+    }
+    public String getSenderId() {
+        return senderId;
+    }
+    public String getSenderUsername() {
+        return senderUsername;
+    }
+    public String getReceiverId() {
+        return receiverId;
+    }
+    public String getReceiverUsername() {
+        return receiverUsername;
+    }
+    public double getAmount() {
+        return amount;
+    }
+    public TransactionStatus getStatus() {
+        return status;
+    }
+    public long getCreatedAt() {
+        return createdAt;
+    }
+    public long getCompletedAt() {
+        return completedAt;
+    }
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
     }
@@ -53,8 +81,8 @@ public class Transaction implements Serializable {
         return "Transaction{" +
                 "id='" + transactionId + '\'' +
                 ", type=" + type +
-                ", sender='" + senderId + '\'' +
-                ", receiver='" + receiverId + '\'' +
+                ", sender='" + senderUsername + '\'' +
+                ", receiver='" + receiverUsername + '\'' +
                 ", amount=" + amount +
                 ", status=" + status +
                 '}';

@@ -15,7 +15,8 @@ public class TransactionEngine {
         loadTransactions();
     }
     private String generateTransactionId() {
-        return "TXN_" + System.currentTimeMillis() + "_" + transactionCounter.incrementAndGet();
+        return "TXN_" + System.currentTimeMillis() + "_" +
+                transactionCounter.incrementAndGet();
     }
     public TransactionResult addMoneyFromBank(String userId, double amount) {
         if (amount <= 0) {
@@ -38,7 +39,9 @@ public class TransactionEngine {
         Transaction txn = new Transaction(
                 txnId,
                 Transaction.TransactionType.ADD_MONEY,
-                userId,
+                user.getUserId(),
+                user.getUsername(),
+                null,
                 null,
                 amount
         );
@@ -88,7 +91,9 @@ public class TransactionEngine {
         Transaction txn = new Transaction(
                 txnId,
                 Transaction.TransactionType.WITHDRAW,
-                userId,
+                user.getUserId(),
+                user.getUsername(),
+                null,
                 null,
                 amount
         );
@@ -142,8 +147,10 @@ public class TransactionEngine {
         Transaction txn = new Transaction(
                 txnId,
                 Transaction.TransactionType.TRANSFER,
-                senderId,
-                receiverId,
+                sender.getUserId(),
+                sender.getUsername(),
+                receiver.getUserId(),
+                receiver.getUsername(),
                 amount
         );
         globalLock.lock();
@@ -179,7 +186,9 @@ public class TransactionEngine {
                 list.add(txn);
             }
         }
-        list.sort((a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
+        list.sort((a, b) ->
+                Long.compare(b.getCreatedAt(), a.getCreatedAt())
+        );
         return list;
     }
     private void persistTransactions() {

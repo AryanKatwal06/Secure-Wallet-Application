@@ -21,7 +21,7 @@ import { scale, verticalScale, fontScale } from '@/lib/responsive';
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [pin, setPin] = useState('');
-  const [scaleAnim] = useState(new Animated.Value(1));
+  const scaleAnim = useState(new Animated.Value(1))[0];
   const router = useRouter();
   const { login, isLoading } = useWallet();
   const handleLogin = async () => {
@@ -42,18 +42,16 @@ export default function LoginScreen() {
       Alert.alert('Login Failed', message);
     }
   };
-  const handlePressIn = () => {
+  const pressIn = () =>
     Animated.spring(scaleAnim, {
       toValue: 0.95,
       useNativeDriver: true,
     }).start();
-  };
-  const handlePressOut = () => {
+  const pressOut = () =>
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
     }).start();
-  };
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
@@ -62,7 +60,7 @@ export default function LoginScreen() {
         style={styles.container}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
           <ScrollView
@@ -88,6 +86,7 @@ export default function LoginScreen() {
                   onChangeText={setUsername}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  returnKeyType="next"
                 />
               </View>
               <View style={styles.inputContainer}>
@@ -96,24 +95,25 @@ export default function LoginScreen() {
                   <Lock size={scale(20)} color="#666" />
                   <TextInput
                     style={styles.pinInput}
-                    placeholder="Enter 6-digit PIN"
+                    placeholder="6-digit PIN"
                     placeholderTextColor="#666"
                     value={pin}
-                    onChangeText={(text) =>
-                      setPin(text.replace(/[^0-9]/g, '').slice(0, 6))
+                    onChangeText={(t) =>
+                      setPin(t.replace(/[^0-9]/g, '').slice(0, 6))
                     }
                     keyboardType="number-pad"
                     secureTextEntry
                     maxLength={6}
+                    returnKeyType="done"
                   />
                 </View>
               </View>
               <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <TouchableOpacity
-                  style={[styles.button, isLoading && styles.buttonDisabled]}
+                  style={[styles.button, isLoading && styles.disabled]}
                   onPress={handleLogin}
-                  onPressIn={handlePressIn}
-                  onPressOut={handlePressOut}
+                  onPressIn={pressIn}
+                  onPressOut={pressOut}
                   disabled={isLoading}
                   activeOpacity={0.9}
                 >
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: verticalScale(12),
   },
-  buttonDisabled: {
+  disabled: {
     opacity: 0.6,
   },
   buttonGradient: {
